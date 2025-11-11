@@ -1,42 +1,45 @@
-// server/server.js
-import express from 'express';
+import express from "express";
+import cors from "cors";
+
 const app = express();
+const PORT = 3000;
 
-// --- fundamentals middleware ---
-app.use(express.json()); // parse JSON request bodies
+// parse JSON bodies
+app.use(express.json());
 
-// allow the Vite dev server (different port) to call this API
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  next();
-});
+// allow the Vite frontend (default http://localhost:5173)
+app.use(cors({ origin: "http://localhost:5173" }));
 
-// --- in-memory data (no DB) ---
+// ---- in-memory data (no DB) ----
 let students = [
-  { id: 1, name: 'Aisha' },
-  { id: 2, name: 'Hasan' }
+  { id: 1, name: "Aisha" },
+  { id: 2, name: "Hasan" }
 ];
 
-// --- routes ---
-// Read: client requests data
-app.get('/api/students', (req, res) => {
+// ---- routes ----
+
+// GET all students
+app.get("/api/students", (req, res) => {
   res.json(students);
 });
 
-// Create: client sends data
-app.post('/api/students', (req, res) => {
+// POST create a student
+app.post("/api/students", (req, res) => {
   const { name } = req.body || {};
   if (!name || !name.trim()) {
-    return res.status(400).json({ error: 'Name is required' });
+    return res.status(400).json({ error: "Name is required" });
   }
   const newStudent = { id: Date.now(), name: name.trim() };
-  students.push(newStudent);
+  students = [newStudent, ...students];
   res.status(201).json(newStudent);
 });
 
-// --- start server ---
-const PORT = 3000;
+// (optional) health check / root message
+app.get("/", (_req, res) => {
+  res.send("✅ Students API is running");
+});
+
+// start server
 app.listen(PORT, () => {
   console.log(`✅ API running at http://localhost:${PORT}`);
 });
